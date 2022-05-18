@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebook.book.DAO.UserMapper">
+
+	<!-- 회원가입 -->
+	<insert id="join" parameterType="User">
+		insert into USER_TB(
+		    USERID
+		    ,USERNAME
+		    ,USERPW
+		    ,USERNM
+		    ,USERTEL
+		    ,USEREMAIL
+		    ,ISSOCIALUSER
+		    )
+		values(
+	 		#{userId }
+	 		,#{userName }
+	 		,#{userPw }
+	 		,#{userNm }
+	 		,#{userTel }
+	 		,#{userEmail }
+	 		,#{isSocialUser }
+		    )
+	 </insert>
+ 
+ 	<!-- ID 유효성 검사 -->
+	<select id="idChk" parameterType="String" resultType="String">
+		select
+			USERID as userId
+		from 
+			USER_TB
+		where
+			USERID like #{userId }
+	</select>
+	
+	<!-- 닉네임 유효성 검사 -->
+	<select id="nmChk" parameterType="String" resultType="String">
+		select
+			USERNM as userNm
+		from 
+			USER_TB
+		where
+			USERNM like #{userNm }
+	</select>
+	
+	<!-- 로그인 시도 -->
+	<select id="selectUserNm" parameterType="User" resultType="String">
+		select
+   			USERNM as userNm
+		from
+  			USER_TB
+		where
+   			USERID = #{userId }
+		and
+   			USERPW = #{userPw }
+	</select>
+	
+	<!-- 마이 리스트 페이지 이동(조회) -->
+	<select id="getUserList" parameterType="String" resultType="User">
+		select
+			USERID as userId
+			,USERNAME as userName
+			,USERPW as userPw
+			,USERNM as userNm
+			,USERTEL as userTel
+			,USEREMAIL as userEmail
+			,ISSOCIALUSER as isSocialUser
+			,SUBEND as subEnd
+		from
+			USER_TB
+		where
+			USERID = #{userId }
+	</select>
+	
+	<!-- 정보 수정 -->
+	<update id = "userUpdate" parameterType = "User">
+		update 
+			USER_TB
+		set
+			USERPW = #{userPw },
+			USERNM = #{userNm },
+			USERTEL = #{userTel },
+			USEREMAIL = #{userEmail }
+		where
+			USERID = #{userId }
+	</update>
+	
+	<!-- 새로운 비밀번호 수정 -->
+	<update id = "updatePw" parameterType = "User">
+		update 
+			USER_TB
+		set
+			USERPW = #{userPw }
+		where
+			USERID = #{userId }
+	</update>
+	
+	<!-- 소셜로그인 기존정보 있는지 확인 -->
+	<select id="userSelect" parameterType="User" resultType="String">
+		select
+			USERNM  
+		from USER_TB
+		where 
+			USERID = #{userId }  
+			and
+			USERNM = #{userNm }  
+			and
+			USERNAME = #{userName }
+		    and
+		    USERTEL = #{userTel }
+		    and 
+		    USEREMAIL = #{userEmail }
+	</select>
+	
+	<!-- 소셜로그인 -->
+	<insert id="userNaverLogin" parameterType="User">
+		insert into USER_TB(
+		    USERID
+		    ,USERNAME
+		    ,USERNM
+		    ,USERTEL
+		    ,USEREMAIL
+		    )
+		values(
+	 		#{userId }
+	 		,#{userName }
+	 		,#{userNm }
+	 		,#{userTel }
+	 		,#{userEmail }
+		    )
+	 </insert>
+	 
+	<!-- 마이 리스트 페이지 이동(조회) -->
+	<select id="getUserList1" parameterType="String" resultType="User">
+		select
+			USERID 
+			,USERNAME
+			,USERNM 
+			,USERTEL 
+			,USEREMAIL
+			,ISSOCIALUSER 
+			,SUBEND
+		from
+			USER_TB
+		where
+			ISSOCIALUSER = 1
+	</select>
+	 
+	<!-- 과거내역조회 -->
+	<select id="getPastBook" parameterType="String" resultType="Read">
+       	select
+       	    rownum,
+       	    bt.BOOKNUM,
+       		bt.BOOKNAME,
+       		bt.BOOKWRITER,
+		    bt.SAVEDFILENAME1,
+		    bt.BOOKCK,
+		    rt.READINDATE,
+		    rt.USERID
+		from 
+		    BOOK_TB bt,
+		    READ_TB rt
+		where
+			<![CDATA[rownum<=5]]>
+			and
+		    bt.BOOKNUM = rt.BOOKNUM
+		    and 
+		    USERID = #{userId }
+		order by
+			rt.READINDATE desc
+	</select>
+	
+	<!-- social로그인 default값 1로 변경 -->
+	<update id = "updateNaverLogin" parameterType = "User">
+		update 
+			USER_TB
+		set
+			ISSOCIALUSER = 1 
+		where
+			USERID = #{userId }
+	</update>
+	
+	<select id = "findId" parameterType="HashMap" resultType = "User">
+		select
+			USERID
+			,USERNAME
+		from
+			USER_TB
+		<if test="userName != null">
+		    <where>
+				USERNAME like #{userName }
+			</where>
+		</if>
+	</select>
+	
+	<update id="updateSubEndAdd" parameterType="HashMap">
+		update 
+			USER_TB
+		set
+			SUBEND = SUBEND + #{addDate }
+		where
+			USERID = #{userId }
+	</update>
+	
+	<select id="chkSub" parameterType="String" resultType="String">
+		select
+			USERID
+		FROM
+			USER_TB
+		WHERE
+			USERID = #{userId }
+		and
+			NOT SYSDATE > SUBEND
+	</select>
+	
+	<update id="updateSubEndSet" parameterType="String">
+	update
+    	USER_TB
+	SET 
+	    SUBEND = SYSDATE
+	WHERE
+	    USERID = #{userId }
+    </update>
+    
+    <select id="pwFindChk" parameterType="User" resultType="User">
+		SELECT
+			USERID,
+			USERNAME
+		FROM
+			USER_TB
+		WHERE
+			USERID = #{userId }
+		AND
+			USEREMAIL = #{userEmail }
+	</select>
+	
+	<delete id="deleteUser" parameterType="String">
+		delete from user_tb
+		where
+			userid = #{userId }
+	</delete>
+	
+	<select id="subChk" resultType="User">
+		SELECT *
+		 FROM 
+		 USER_TB
+		where
+		userId = #{userId}
+	</select>
+	
+	<update id="updatesubChk" parameterType="User">
+		UPDATE
+			USER_TB
+		SET
+			SUBEND = null
+		WHERE
+			USERID = #{userId }
+	</update>
+</mapper>

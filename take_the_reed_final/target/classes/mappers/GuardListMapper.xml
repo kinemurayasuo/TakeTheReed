@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+ <mapper namespace ="com.ebook.book.DAO.GuardMapper">
+ 
+ <!-- 회원전체 보기 -->
+ <select id="userList" parameterType = "HashMap" resultType = "User">
+	 select
+	 	*
+	 from
+	 	user_Tb
+ </select>
+ 
+ <!-- 회원 삭제 -->
+ <delete id ="userDelete" parameterType = "User">
+ delete
+ 	user_tb
+ where
+ 	userId = #{userId}
+ 
+ </delete>
+ 
+ 
+ <!-- 책 보기 -->
+ <select id="bookList" parameterType = "HashMap" resultType="Book">
+	select
+		*
+		from
+	book_tb
+	</select>
+	
+ <!-- 책 업로드 -->
+ <insert id="bookUpload" parameterType="Book">
+		INSERT INTO BOOK_TB
+		(
+			BOOKNUM
+			,BOOKNAME
+			,BOOKWRITER
+			,BOOKCATE
+			,BOOKCON
+			<if test="savedFilename1 != null and(savedFilename2 != null)">
+			,ORIGINALFILENAME1
+			,SAVEDFILENAME1
+			,ORIGINALFILENAME2
+			,SAVEDFILENAME2
+			</if>
+		)
+		VALUES
+		(
+			BOOKNUM_SEQ.NEXTVAL
+			,#{bookName }
+			,#{bookWriter }
+			,#{bookCate }
+			,#{bookCon }
+			<if test = "savedFilename1 != null and(savedFilename2 != null)">
+			,#{originalFilename1 }
+			,#{savedFilename1 }
+			,#{originalFilename2 }
+			,#{savedFilename2 }
+			</if>
+		)
+	</insert>
+	
+	<!-- 책 보기 -->
+	<select id="bookView" parameterType="int" resultType="Book">
+		SELECT
+			BOOKNUM,
+			SAVEDFILENAME2
+		FROM
+			BOOK_TB
+		WHERE
+			BOOKNUM = #{bookNum }
+	</select>
+	
+	<!-- 전체 책 개수 -->
+	<select id = "getTotalRecordsCount" resultType = "int">
+ 		select
+ 			count(*)
+ 		from
+ 			book_tb	
+ 	</select>
+ 	
+	<select id="bookListDetail" parameterType="int" resultType="Book">
+		SELECT
+			*
+		FROM
+			BOOK_TB
+		WHERE
+			BOOKNUM = #{bookNum }
+	</select>
+	
+	<!-- 책 삭제 -->
+	<delete id = "bookListDelete" parameterType = "String">
+		delete from
+			book_tb
+		where
+			bookNum = #{bookNum}
+	</delete>
+	
+	<!-- 책 수정  -->
+ 	<update id="bookListUpdate" parameterType="book">
+  		update
+			book_Tb
+		set
+			bookName = #{bookName},
+			bookWriter = #{bookWriter},
+			bookCate = #{bookCate},
+			bookCon = #{bookCon},
+			<if test="savedFilename1 != null and(savedFilename2 != null)">
+			originalFilename1 = #{originalFilename1 },
+			savedFilename1 = #{savedFilename1 },
+			originalFilename2 = #{originalFilename2 },
+			savedFilename2 = #{savedFilename2 }
+			</if>
+		where
+			bookNum = #{bookNum}
+	</update>
+	
+	
+	<select id="getRatingAverage" resultType="double">
+  	
+  		select avg(bookStar)
+  		from star_tb
+  		where bookNum = #{bookNum}
+  	
+  	</select>
+
+	<update id="updateRating">
+	
+		update star_tb
+		set starAvg = #{starAvg}
+		where bookNum = #{bookNum}
+	
+	</update>
+	
+	<!-- 책 추천 -->
+	<insert id="starUpdate" parameterType="Star">
+		insert into Star_tb
+		(
+			userId,
+			bookNum,
+			bookStar
+		)
+		value
+		(
+			#{userId},
+			#{bookNum},
+			#{bookStar}
+		)
+	</insert>
+ </mapper>

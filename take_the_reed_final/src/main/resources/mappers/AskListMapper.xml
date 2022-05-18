@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+ <mapper namespace ="com.ebook.book.DAO.AskListMapper">
+	<!-- 전체 게시글 -->
+ 	<select id = "getTotalRecordsCount" resultType = "int">
+ 		select
+ 			count(*)
+ 		from
+ 			ask_tb
+ 		<where>
+		<if test="searchType == 'askTitle'">
+			askTitle like '%' || #{searchWord } || '%'
+		</if>
+		<if test="searchType == 'askCon'">
+			askCon like '%' || #{searchWord } || '%'
+		</if>
+		<if test="searchType == 'userNm'">
+			userId like '%' || #{searchWord } || '%'
+		</if>
+	</where>	
+ 	</select>
+ 	
+   <!-- 글 쓰기 -->
+   <insert id = "insertAskWrite" parameterType = "Ask">
+   insert into
+           ask_tb
+           (
+              askNum,
+              userId,
+              userNm,
+              askTitle,
+              askCon
+           )
+           values
+           (
+              askNum_seq.nextval,
+              #{userId},
+              #{userNm},
+              #{askTitle },
+              #{askCon }
+           )
+   </insert>
+	
+	<!-- 글 읽기 -->
+	<select id="selectAsk" resultType="ask" parameterType="int">
+		select
+			askNum,
+			userNm,
+			askTitle,
+			askCon,
+			askTime
+		from 
+			ask_tb
+		where
+			askNum = #{askNum }	
+	</select>
+	
+	<!-- 글 수정  -->
+ 	<update id="updateAsk" parameterType="ask">
+  		update
+			ask_Tb
+		set
+			askTitle = #{askTitle},
+			askCon = #{askCon}
+		where
+			askNum = #{askNum}
+			and
+			userId = #{userId}
+	</update>
+	
+	<!-- 글 삭제 -->
+	<delete id = "deleteAsk" parameterType="int">
+		delete from
+			ask_tb
+		where
+			askNum = #{asknum}
+	</delete>
+	
+	<!-- 검색기능 분할 -->
+	<select id="askList" parameterType="HashMap" resultType="Ask">
+		select
+		    at.askNum,
+		    at.askTitle,
+		    at.askCon,
+		    at.userNm,
+		    at.asktime
+		from
+		    ask_tb at,
+		    (select
+		    	rownum as rn,
+		    	asknum an
+		    from
+		    	ask_tb
+		    order by
+		    	asknum desc) rt
+		    	<if test="searchType != null">
+	    </if>
+	    <if test="searchType == null">
+	    	where
+	    		at.asknum = rt.an
+				and
+				rt.an between #{startRecord } + 1 and #{startRecord } + #{countPerPage }
+	    </if>
+	    	order by
+	    	<if test="sort == null">
+	    		askNum desc
+	    	</if>
+	    	<if test="sort == 'date_desc'">
+	    		askTime desc
+	    	</if>
+	    	<if test="sort == 'date_asc'">
+	    		askTime asc
+	    	</if>
+	</select>
+	
+	<!-- 검색기능  -->
+	<select id="askListSearch" parameterType="HashMap" resultType="Ask">
+		select
+		    at.askNum,
+		    at.askTitle,
+		    at.askCon,
+		    at.userNm,
+		    at.asktime
+		from
+		    ask_tb at,
+		    (select
+		    	rownum as rn,
+		    	asknum an
+		    from
+		    	ask_tb
+		    order by
+		    	asknum desc) rt
+		<if test="searchType != null">
+		    <where>
+				<if test="searchType == 'askTitle'">
+					askTitle like '%' || #{searchWord } || '%'
+					and
+					at.asknum = rt.an
+					and
+					rt.rn between #{startRecord } + 1 and #{startRecord } + #{countPerPage }
+				</if>
+				<if test="searchType == 'askCon'">
+					askCon like '%' || #{searchWord } || '%'
+					and
+					at.asknum = rt.an
+					and
+					rt.rn between #{startRecord } + 1 and #{startRecord } + #{countPerPage }
+				</if>
+				<if test="searchType == 'userNm'">
+					userNm like '%' || #{searchWord } || '%'
+					and
+					at.asknum = rt.an
+					and
+					rt.rn between #{startRecord } + 1 and #{startRecord } + #{countPerPage }
+				</if>
+
+			</where>
+	    </if>
+	    <if test="searchType == null">
+	    	where
+	    		at.asknum = rt.an
+				and
+				rt.an between #{startRecord } + 1 and #{startRecord } + #{countPerPage }
+	    </if>
+	    	order by
+	    	<if test="sort == null">
+	    		askNum desc
+	    	</if>
+	    	<if test="sort == 'date_desc'">
+	    		askTime desc
+	    	</if>
+	    	<if test="sort == 'date_asc'">
+	    		askTime asc
+	    	</if>
+ 	</select>
+	
+	<!--댓글 보기-->
+ 	<select id="readAllReply" parameterType="int" resultType="Reply">
+	  	select
+	  		replyNum,
+	  		replyContent,
+	  		replyDate,
+	  		askNum,
+	  		userNm,
+	  		userId
+	  	from
+	  		reply_tb
+	  	where
+	  		askNum = #{listNum }
+	  	order by
+	  		ReplyNum
+	  </select>
+	  
+	  <!--댓글 쓰기-->
+  	<insert id="replyWrite" parameterType="Reply">
+		insert into
+  			reply_tb(
+  				replyNum,
+                replyContent,
+                askNum,
+  				userNm,
+  				userId
+  			)
+  			values
+  			(
+  				replyNum_seq.nextval,
+                #{replyContent},
+                #{askNum},
+  				#{userNm},
+  				#{userId}
+  			)
+  	</insert>
+  	
+	<!--댓글 삭제-->
+		<delete id="deleteReply" parameterType="int">
+	  		delete from
+	  			reply_tb
+	  		where
+	  			replyNum = #{replyNum }
+	  </delete>
+	  
+	  <delete id="deleteMemberReply" parameterType="String">
+	  		delete from
+	  			reply_tb
+	  		where
+	  			userId = #{userId }
+	  </delete>
+	  
+	 <!-- 글-댓글 삭제 -->
+	 <delete id="deleteQuestionReply" parameterType="int">
+	 	delete from
+	  		reply_tb
+	  	where
+	  		askNum = #{askNum }
+	  </delete>
+	  
+	<!--댓글 수정 -->
+	<update id="updateReply" parameterType="Reply">
+	 	update
+	  		reply_Tb
+	  	set
+	  		replyContent = #{replyContent },
+	  		replyDate = DEFAULT
+	  	where
+	  		replyNum = #{replyNum }
+	 </update>
+ </mapper>

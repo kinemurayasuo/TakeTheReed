@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace ="com.ebook.book.DAO.BookListMapper">
+<!-- 전체 게시글 -->
+ 	<select id = "getTotalRecordsCount" resultType = "int">
+ 		select
+ 			count(*)
+ 		from
+ 			book_tb
+ 		<where>
+		<if test="searchType == 'bookName'">
+			bookName like '%'|| #{searchWord }||'%'
+		</if>
+		<if test="searchType == 'bookCon'">
+			bookCon like '%'||#{searchWord }||'%'
+		</if>
+		<if test="searchType == 'bookCate'">
+			bookCate like '%' || #{searchWord } || '%'
+		</if>
+	</where>	
+ 	</select>
+
+	<!-- 검색기능 분할 -->
+	<select id="bookList" parameterType="HashMap" resultType="Book">
+		select
+		    bt.bookNum,
+		    bt.bookName,
+		    bt.bookCk,
+		    bt.bookCon,
+		    bt.savedfilename1,
+		    bt.bookCate
+		from
+		    book_tb bt,
+		    (select
+		    	rowNum as rn,
+		    	bookNum bn
+		    from
+		    	book_tb
+		    order by
+		    	bookNum desc) rt
+		    	<if test="searchType != null">
+	    </if>
+	    <if test="searchType == null">
+	    	where
+	    		bt.booknum = rt.bn
+				and
+				rt.bn between #{startRecord } + 1 and #{startRecord } + #{countPerPage }
+	    </if>
+	    	order by
+	    	<if test="sort == null">
+	    		bookNum desc
+	    	</if>
+	    	<!-- <if test="sort == 'likeCnt'">
+	    		like_cnt desc
+	    	</if>  -->
+	    	<if test="sort == 'date_desc'">
+	    		bookdate desc
+	    	</if>
+	    	<if test="sort == 'date_asc'">
+	    		bookdate asc
+	    	</if>
+	</select>
+	
+<!-- 검색기능  -->
+	<select id="bookListSearch" parameterType="HashMap" resultType="book">
+		select
+		   bt.bookNum,
+		   bt.bookName,
+		   bt.bookCk,
+		   bt.bookCate,
+		   bt.bookEnd,
+		   bt.SAVEDFILENAME1,
+		   bt.bookdate
+		from
+		    book_tb bt,
+		    (select
+		    	rowNum as rn,
+		    	bookNum bn
+		    from
+		    	book_tb
+		    order by
+		    	bookNum desc) rt
+		<if test="searchType != null">
+		    <where>
+				<if test="searchType == 'bookName'">
+					bookName like '%'||#{searchWord }||'%'
+					and
+					bt.bookNum = rt.bn
+					and
+					rt.rn between #{startRecord } + 1 and #{startRecord } + #{countPerPage }
+				</if>
+				<if test="searchType == 'bookCon'">
+					bookCon like '%'||#{searchWord }||'%'
+					and
+					bt.bookNum = rt.bn
+					and
+					rt.rn between #{startRecord } + 1 and #{startRecord } + #{countPerPage }
+				</if>
+				<if test="searchType == 'bookCate'">
+					bookCate like '%'||#{searchWord }||'%'
+					and
+					bt.bookNum = rt.bn
+					and
+					rt.rn between #{startRecord } + 1 and #{startRecord } + #{countPerPage }
+				</if>
+
+			</where>
+	    </if>
+	    <if test="searchType == null">
+	    	where
+	    		bt.booknum = rt.bn
+				and
+				rt.bn between #{startRecord } + 1 and #{startRecord } + #{countPerPage }
+	    </if>
+	    	order by
+	    	<if test="sort == null">
+	    		bookNum desc
+	    	</if>
+	    	<!-- <if test="sort == 'likeCnt'">
+	    		like_cnt desc
+	    	</if> -->
+	    	<if test="sort == 'date_desc'">
+	    		bookdate desc
+	    	</if>
+	    	<if test="sort == 'date_asc'">
+	    		bookdate asc
+	    	</if>
+ 	</select>
+ 	
+<!-- 게시물 총 갯수 + 검색 적용 -->
+	<select id="searchCount" parameterType="hashMap" resultType="int">
+		select count(bookNum) from book_tb		
+		<where>
+			<if test="searchType == 'bookName'">
+				bookName like '%'||#{searchWord }||'%'
+			</if>
+			
+			<if test="searchType == 'bookCon'">
+				bookCon like '%'||#{searchWord }||'%'
+			</if>
+			
+			<if test="searchType == 'bookCate'">
+				bookCate like '%'||#{searchWord }||'%'
+			</if>
+		</where>
+	</select>
+<!-- 책보기 -->
+	<select id="bookView" parameterType="int" resultType="Book">
+		SELECT
+			BOOKNUM,
+			SAVEDFILENAME2
+		FROM
+			BOOK_TB
+		WHERE
+			BOOKNUM = #{bookNum }
+	</select>
+	
+	<!-- 스타 테이블 -->
+	<select id="star" parameterType = "HashMap" resultType="Star">
+		select 
+			* 
+		from 
+			Star_Tb
+		where
+			booknum = #{bookNum}
+		and
+			userId = #{userId }
+	</select>
+	
+<!-- 책 상세 페이지 -->	
+	<select id="bookDetail" parameterType="HashMap" resultType="Book">
+	 SELECT 
+         bt.bookNum,
+         bt.bookName,
+         bt.bookWriter,
+         bt.bookCon,
+         bt.bookCk,
+         bt.bookCate,
+         bt.savedfilename1,
+         ut.userId
+      FROM
+         BOOK_TB bt,
+         user_Tb ut
+      WHERE
+         bt.BOOKNUM = #{bookNum }
+      AND
+      	ut.userId = #{userId}
+
+	</select>
+	
+	<!-- 별점 입력시 상세 페이지 -->
+	<select id="bookDetail2" parameterType="HashMap" resultType="Book">
+	
+	SELECT DISTINCT
+         bt.bookNum,
+         bt.bookName,
+         bt.bookWriter,
+         bt.bookCon,
+         bt.bookCk,
+         bt.bookCate,
+         bt.savedfilename1,
+         st.bookStar,
+         st.bookStarAvg,
+         st.bookStarCk,
+         st.userId
+      FROM
+         BOOK_TB bt,
+         Star_Tb st
+      WHERE
+         bt.BOOKNUM = #{bookNum }
+      and
+      	 st.userid = #{userId}
+	and
+		bt.booknum = st.booknum
+	
+	</select>
+	
+<!-- 책 찜 체크 -->
+	<select id="getLikeChk" parameterType="HashMap" resultType="String">
+		SELECT
+			LIKECHK
+		FROM
+			LIKE_TB
+		WHERE
+			USERID = #{userId }
+		AND
+			BOOKNUM = #{bookNum }
+	</select>
+<!-- 찜 넣기 -->
+	<insert id="insertLike" parameterType="HashMap">
+		INSERT INTO LIKE_TB(
+			BOOKNUM,
+			USERID
+		)
+		VALUES(
+			#{bookNum },
+			#{userId }
+		)
+	</insert>
+	
+<!-- 추천 수정 -->
+	<update id="updateLikeChk" parameterType="HashMap">
+		UPDATE
+			LIKE_TB
+		SET
+			LIKECHK = 1
+		WHERE
+			USERID = #{userId }
+		AND
+			BOOKNUM = #{bookNum }
+	</update>
+	
+<!-- 추천 삭제 -->	
+	<delete id="deleteLike" parameterType="HashMap">
+		DELETE FROM
+			LIKE_TB
+		WHERE
+			USERID = #{userId }
+		AND
+			BOOKNUM = #{bookNum }
+	</delete>
+
+<!-- 조회 수 업 -->
+	<update id="updateBookCk" parameterType="int">
+		UPDATE
+			BOOK_TB
+		SET
+			BOOKCK = BOOKCK + 1
+		WHERE
+			BOOKNUM = #{bookNum }
+	</update>
+	
+<!-- 책 읽기 -->	
+	<insert id="insertReadBook" parameterType="Read">
+		INSERT INTO READ_TB(
+			BOOKNUM,
+			USERID
+		) VALUES(
+			#{bookNum },
+			#{userId }
+		)
+	</insert>
+	
+	
+	<!-- 평가 평균 구하기 -->
+<select id="avgScore" parameterType="int" resultType="double">
+	select
+		round(avg(bookStar),2) as bookStarAvg
+	from
+		Star_tb
+	where
+		bookNum = #{bookNum }
+</select>
+	<!-- 평가 레시피(게시판) 테이블에 반영 -->
+<update id="updateAvgScore" parameterType="Map">
+	update
+		Star_tb
+	set
+		bookStarAvg = #{bookStarAvg }
+	where 
+		bookNum = #{bookNum }
+</update>
+
+<select id="homeBookList" resultType="Book">
+	select
+		*
+	from
+		book_tb
+</select>
+
+<!-- 별점 찾기 -->
+<select id="starChk" parameterType="HashMap" resultType="Star">
+	select
+		*
+	from
+		star_tb
+	where
+		booknum = #{bookNum }
+	and
+		userid = #{userId }
+</select>
+
+<!-- 별점 수정  -->
+<update id="starUpdate" parameterType="HashMap">
+	update
+		star_tb
+	set
+		bookstar = #{bookStar }
+	where
+		userid = #{userId }
+	and
+		booknum = #{bookNum }
+</update>
+
+<!-- 별점 입력 -->
+<insert id="starInsert" parameterType="Star">
+	insert into Star_Tb (
+		bookNum,
+		userId,
+		bookStar,
+		bookStarCk
+	) values (
+		#{bookNum },
+		#{userId },
+		#{bookStar },
+		+1
+	)
+</insert>
+
+<select id="subEnd" parameterType="String" resultType="String">
+	select subEnd from user_tb
+	where userId = #{userId}
+</select>
+	
+	<select id="bookDetail3" parameterType="int" resultType="Book">
+		select
+			*
+		from
+			book_tb
+		where
+			booknum = #{bookNum }
+	</select>
+</mapper>

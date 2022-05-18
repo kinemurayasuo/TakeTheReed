@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.ebook.book.DAO.LikeMapper">
+	<select id="likeList" parameterType="HashMap" resultType="like">
+		SELECT  DISTINCT
+		    LT.USERID,
+		    LT.LIKECHK,
+		    LT.BOOKNUM,
+		    BT.BOOKWRITER,
+		    BT.SAVEDFILENAME1,
+		    BT.BOOKCK,
+		    BT.BOOKNAME
+		FROM
+		    LIKE_TB LT,
+		    BOOK_TB BT
+		WHERE
+		    LT.USERID = #{userId }
+		AND
+		    LT.BOOKNUM = BT.BOOKNUM
+	</select>
+	
+	<select id="getTotalRecordsCount" parameterType="HashMap" resultType="int">
+		SELECT DISTINCT
+			COUNT(*)
+		FROM
+			LIKE_TB LT,
+		    BOOK_TB BT,
+		    STAR_TB ST
+		WHERE
+			LT.USERID = #{userId }
+			AND
+			LT.BOOKNUM = BT.BOOKNUM
+			AND
+			ST.BOOKNUM = BT.BOOKNUM
+			AND
+			LT.BOOKNUM = ST.BOOKNUM
+	</select>
+</mapper>
